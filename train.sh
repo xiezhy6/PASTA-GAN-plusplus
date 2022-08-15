@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ $1 == 1 ]; then
-    CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -W ignore train_fullbody_512.py \
+    CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -W ignore train.py \
         --outdir ./training-runs-fullbody \
         --data /datazy/Datasets/UPT_512_320 \
         --gpus 8 --cfg fashion \
