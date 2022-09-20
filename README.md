@@ -6,7 +6,7 @@ Official implementation of "PASTA-GAN++: A Versatile Framework for High-Resoluti
 
 Create a virtual environment:
 ```
-virtualenv pasta --python=3.7
+virtualenv pasta --python=python3.7
 source pasta/bin/activate
 ```
 Install required packages:
