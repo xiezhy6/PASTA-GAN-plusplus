@@ -58,6 +58,7 @@ def num_range(s: str) -> List[int]:
 @click.option('--batchsize',type=int)
 @click.option('--testpart',type=str)
 @click.option('--testtxt',type=str)
+@click.option('--use-sleeve-mask', is_flag=True)
 def generate_images(
     ctx: click.Context,
     network_pkl: str,
@@ -70,7 +71,8 @@ def generate_images(
     dataroot: str,
     batchsize: str,
     testpart: str,
-    testtxt: str
+    testtxt: str,
+    use_sleeve_mask: boolean
 ):
     """Generate images using pretrained network pickle.
 
@@ -105,11 +107,11 @@ def generate_images(
     os.makedirs(outdir, exist_ok=True)
 
     if testpart == 'full':
-        dataset = custom_dataset.UvitonDatasetFull_512_test_full(path=dataroot,test_txt=testtxt,use_labels=True, max_size=None, xflip=False)
+        dataset = custom_dataset.UvitonDatasetFull_512_test_full(path=dataroot,test_txt=testtxt,use_sleeve_mask=use_sleeve_mask, max_size=None, xflip=False)
     elif testpart == 'upper':
-        dataset = custom_dataset.UvitonDatasetFull_512_test_upper(path=dataroot,test_txt=testtxt,use_labels=True, max_size=None, xflip=False)
+        dataset = custom_dataset.UvitonDatasetFull_512_test_upper(path=dataroot,test_txt=testtxt,use_sleeve_mask=use_sleeve_mask, max_size=None, xflip=False)
     elif testpart == 'lower':
-        dataset = custom_dataset.UvitonDatasetFull_512_test_lower(path=dataroot,test_txt=testtxt,use_labels=True, max_size=None, xflip=False)
+        dataset = custom_dataset.UvitonDatasetFull_512_test_lower(path=dataroot,test_txt=testtxt,use_sleeve_mask=use_sleeve_mask, max_size=None, xflip=False)
     else:
         raise ValueError('Invalid value for test part!')
     dataloader = torch.utils.data.DataLoader(dataset,batch_size=batchsize,shuffle=False,pin_memory=True, num_workers=0)

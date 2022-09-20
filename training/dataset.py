@@ -8,6 +8,7 @@
 
 #coding:utf-8
 
+from curses import noecho
 import os
 import numpy as np
 import zipfile
@@ -1251,11 +1252,13 @@ class UvitonDatasetFull_512_test_full(Dataset):
     def __init__(self,
         path,                   # Path to directory or zip.
         test_txt,
+        use_sleeve_mask,
         resolution      = None, # Ensure specific resolution, None = highest available.
         **super_kwargs,         # Additional arguments for the Dataset base class.
     ):
         self._path = path
         self._zipfile = None
+        self.use_sleeve_mask = use_sleeve_mask
 
         if os.path.isdir(self._path):
             self._type = 'dir' 
@@ -1429,11 +1432,13 @@ class UvitonDatasetFull_512_test_full(Dataset):
         upper_clothes_mask_rgb = upper_clothes_mask_rgb * 255
         lower_clothes_mask_rgb = lower_clothes_mask_rgb * 255
     
-        fname = self._clothes_garment_parsing_fnames[raw_idx]
-        f = os.path.join(self._path, fname)
-        garment_parsing = cv2.imread(f)[...,0:1]
-        garment_parsing = np.pad(garment_parsing, ((0,0),(left_padding,right_padding),(0,0)), 'constant',constant_values=(0,0))
-        sleeve_mask = (garment_parsing==10).astype(np.uint8) + (garment_parsing==11).astype(np.uint8)
+        sleeve_mask = None
+        if self.use_sleeve_mask:
+            fname = self._clothes_garment_parsing_fnames[raw_idx]
+            f = os.path.join(self._path, fname)
+            garment_parsing = cv2.imread(f)[...,0:1]
+            garment_parsing = np.pad(garment_parsing, ((0,0),(left_padding,right_padding),(0,0)), 'constant',constant_values=(0,0))
+            sleeve_mask = (garment_parsing==10).astype(np.uint8) + (garment_parsing==11).astype(np.uint8)
 
         norm_img, norm_img_lower, denorm_upper_img, denorm_lower_img = self.normalize(upper_clothes_image, lower_clothes_image, \
                 upper_clothes_mask_rgb, lower_clothes_mask_rgb, sleeve_mask, clothes_keypoints, keypoints, 2)
@@ -1837,12 +1842,19 @@ class UvitonDatasetFull_512_test_full(Dataset):
 
             if clothes_M is not None:
                 if ii == 2 or ii == 3 or ii == 4 or ii == 5:
-                    part_img = cv2.warpPerspective(upper_img*sleeve_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
-                    part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*sleeve_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    if sleeve_mask is not None:
+                        part_img = cv2.warpPerspective(upper_img*sleeve_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*sleeve_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    else:
+                        part_img = cv2.warpPerspective(upper_img, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)                  
                 else:
-                    part_img = cv2.warpPerspective(upper_img*(1-sleeve_mask), clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
-                    part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*(1-sleeve_mask), clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
-
+                    if sleeve_mask is not None:
+                        part_img = cv2.warpPerspective(upper_img*(1-sleeve_mask), clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*(1-sleeve_mask), clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    else:
+                        part_img = cv2.warpPerspective(upper_img, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
                 if person_M_inv is not None:
                     denorm_patch = cv2.warpPerspective(part_img, person_M_inv, (o_w,o_h), borderMode=cv2.BORDER_CONSTANT)
                     # part_img = cv2.warpPerspective(denorm_patch, person_M, (w,h), borderMode=cv2.BORDER_CONSTANT)
@@ -1941,11 +1953,13 @@ class UvitonDatasetFull_512_test_upper(Dataset):
     def __init__(self,
         path,                   # Path to directory or zip.
         test_txt,
+        use_sleeve_mask,
         resolution      = None, # Ensure specific resolution, None = highest available.
         **super_kwargs,         # Additional arguments for the Dataset base class.
     ):
         self._path = path
         self._zipfile = None
+        self.use_sleeve_mask = use_sleeve_mask
 
         if os.path.isdir(self._path):
             self._type = 'dir' 
@@ -2174,11 +2188,13 @@ class UvitonDatasetFull_512_test_upper(Dataset):
         upper_clothes_mask_rgb = upper_clothes_mask_rgb * 255
         lower_clothes_mask_rgb = lower_clothes_mask_rgb * 255
     
-        fname = self._clothes_garment_parsing_fnames[raw_idx]
-        f = os.path.join(self._path, fname)
-        garment_parsing = cv2.imread(f)[...,0:1]
-        garment_parsing = np.pad(garment_parsing, ((0,0),(left_padding,right_padding),(0,0)), 'constant',constant_values=(0,0))
-        sleeve_mask = (garment_parsing==10).astype(np.uint8) + (garment_parsing==11).astype(np.uint8)
+        sleeve_mask = None
+        if self.use_sleeve_mask:
+            fname = self._clothes_garment_parsing_fnames[raw_idx]
+            f = os.path.join(self._path, fname)
+            garment_parsing = cv2.imread(f)[...,0:1]
+            garment_parsing = np.pad(garment_parsing, ((0,0),(left_padding,right_padding),(0,0)), 'constant',constant_values=(0,0))
+            sleeve_mask = (garment_parsing==10).astype(np.uint8) + (garment_parsing==11).astype(np.uint8)
 
         norm_img, norm_img_lower, denorm_upper_img, denorm_upper_img_wo_sleeve, denorm_lower_img = self.normalize(upper_clothes_image, \
             lower_clothes_image, upper_clothes_mask_rgb, lower_clothes_mask_rgb, sleeve_mask, clothes_keypoints, keypoints, 2)
@@ -2588,11 +2604,19 @@ class UvitonDatasetFull_512_test_upper(Dataset):
 
             if clothes_M is not None:
                 if ii == 2 or ii == 3 or ii == 4 or ii == 5:
-                    part_img = cv2.warpPerspective(upper_img*sleeve_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
-                    part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*sleeve_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    if sleeve_mask is not None:
+                        part_img = cv2.warpPerspective(upper_img*sleeve_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*sleeve_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    else:
+                        part_img = cv2.warpPerspective(upper_img, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
                 else:
-                    part_img = cv2.warpPerspective(upper_img*(1-sleeve_mask), clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
-                    part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*(1-sleeve_mask), clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    if sleeve_mask is not None:
+                        part_img = cv2.warpPerspective(upper_img*(1-sleeve_mask), clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*(1-sleeve_mask), clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    else:
+                        part_img = cv2.warpPerspective(upper_img, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask, clothes_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
 
                 if person_M_inv is not None:
                     denorm_patch = cv2.warpPerspective(part_img, person_M_inv, (o_w,o_h), borderMode=cv2.BORDER_CONSTANT)
@@ -2706,11 +2730,13 @@ class UvitonDatasetFull_512_test_lower(Dataset):
     def __init__(self,
         path,                   # Path to directory or zip.
         test_txt,
+        use_sleeve_mask,
         resolution      = None, # Ensure specific resolution, None = highest available.
         **super_kwargs,         # Additional arguments for the Dataset base class.
     ):
         self._path = path
         self._zipfile = None
+        self.use_sleeve_mask = use_sleeve_mask
 
         if os.path.isdir(self._path):
             self._type = 'dir' 
@@ -2864,11 +2890,13 @@ class UvitonDatasetFull_512_test_lower(Dataset):
             upper_bound = lower_bbox[1]
             lower_clothes_upper_bound[upper_bound:,...] += 255
 
-        fname = self._garment_parsing_fnames[raw_idx]
-        f = os.path.join(self._path, fname)
-        garment_parsing = cv2.imread(f)[...,0:1]
-        garment_parsing = np.pad(garment_parsing, ((0,0),(left_padding,right_padding),(0,0)), 'constant',constant_values=(0,0))
-        sleeve_mask = (garment_parsing==10).astype(np.uint8) + (garment_parsing==11).astype(np.uint8)
+        sleeve_mask = None
+        if self.use_sleeve_mask:
+            fname = self._garment_parsing_fnames[raw_idx]
+            f = os.path.join(self._path, fname)
+            garment_parsing = cv2.imread(f)[...,0:1]
+            garment_parsing = np.pad(garment_parsing, ((0,0),(left_padding,right_padding),(0,0)), 'constant',constant_values=(0,0))
+            sleeve_mask = (garment_parsing==10).astype(np.uint8) + (garment_parsing==11).astype(np.uint8)
 
         ##### clothes items
         fname = self._clothes_image_fnames[raw_idx]
@@ -3332,11 +3360,19 @@ class UvitonDatasetFull_512_test_lower(Dataset):
 
             if person_M is not None:
                 if ii == 2 or ii == 3 or ii == 4 or ii == 5:
-                    part_img = cv2.warpPerspective(upper_img*sleeve_mask, person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
-                    part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*sleeve_mask, person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    if sleeve_mask is not None:
+                        part_img = cv2.warpPerspective(upper_img*sleeve_mask, person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*sleeve_mask, person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    else:
+                        part_img = cv2.warpPerspective(upper_img, person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask, person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
                 else:
-                    part_img = cv2.warpPerspective(upper_img*(1-sleeve_mask), person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
-                    part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*(1-sleeve_mask), person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    if sleeve_mask is not None:
+                        part_img = cv2.warpPerspective(upper_img*(1-sleeve_mask), person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask*(1-sleeve_mask), person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                    else:
+                        part_img = cv2.warpPerspective(upper_img, person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
+                        part_clothes_mask = cv2.warpPerspective(upper_clothes_mask, person_M, (w,h), borderMode = cv2.BORDER_CONSTANT)
 
                 if person_M_inv is not None:
                     denorm_patch = cv2.warpPerspective(part_img, person_M_inv, (o_w,o_h), borderMode=cv2.BORDER_CONSTANT)                    
