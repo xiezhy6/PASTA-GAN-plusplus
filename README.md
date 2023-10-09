@@ -1,6 +1,6 @@
-# PASTA-GAN++: A Versatile Framework for High-Resolution Unpaired Virtual Try-on
+# Versatile Unpaired Virtual Try-on via Patch-Routed Spatially-Adaptive GAN++
 
-Official implementation of "PASTA-GAN++: A Versatile Framework for High-Resolution Unpaired Virtual Try-on".
+Official implementation of "Versatile Unpaired Virtual Try-on via Patch-Routed Spatially-Adaptive GAN++".
 
 ## Requirements
 
